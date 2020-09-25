@@ -1,7 +1,10 @@
 import { Command, flags } from "@oclif/command";
 import clear from "clear";
+import * as inquirer from "inquirer";
 import figlet from "figlet";
 import chalk from "chalk";
+import { DatabaseService } from "./database.service";
+import { DatabaseType } from "./model/enum/databaseType";
 /**
  * model generator
  */
@@ -9,6 +12,9 @@ class ModelGenerator extends Command {
   static description = "describe the command here";
 
   static flags = {
+    database: flags.string({
+      options: ["MSSQL", "PostgreSQL", "MongoDB", "MySql"],
+    }),
     // add --version flag to show CLI version
     version: flags.version({ char: "v" }),
     help: flags.help({ char: "h" }),
@@ -26,15 +32,44 @@ class ModelGenerator extends Command {
   async run() {
     const { args, flags } = this.parse(ModelGenerator);
     clear();
+    const response: any = await inquirer.prompt([
+      {
+        name: "database",
+        message: "Select a database",
+        type: "list",
+        choices: [{ name: "MSSQL" }, { name: "PostgreSQL" }],
+      },
+    ]);
     this.log(
       chalk.greenBright(
         figlet.textSync("model-gen", { horizontalLayout: "full" })
       )
     );
-    this.log(chalk.red(flags.conStr));
-    const name = flags.conStr ?? "world";
-    if (args.conStr) {
-      this.log(`you input --force and --file: ${name}`);
+    this.log(chalk.bgYellowBright("You choose", response.database));
+    if (flags.conStr) {
+      this.connectDb(flags.conStr);
+      this.log(chalk.red(flags.conStr));
+      const name = flags.conStr ?? "world";
+      if (args.conStr) {
+        this.log(`you input --force and --file: ${name}`);
+      }
+    }
+  }
+
+  /**
+   *@param {string} connectionString
+   */
+  async connectDb(connectionString: string) {
+    try {
+      const service: DatabaseService = new DatabaseService();
+      const result = service
+        .connectToDb(connectionString, DatabaseType.MSSQL)
+        .then((value) => {
+          return value;
+        });
+      this.log(chalk.green(result));
+    } catch (error) {
+      this.log(error);
     }
   }
 }
