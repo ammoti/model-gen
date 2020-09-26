@@ -2,7 +2,7 @@
 import { DatabaseType } from "./model/enum/databaseType";
 import mssql from "mssql";
 import chalk from "chalk";
-import { log } from 'console';
+import { log } from "console";
 
 /**
  * Database Service Responsible for the connection, commands
@@ -20,20 +20,18 @@ export class DatabaseService {
         const conn: mssql.ConnectionPool = new mssql.ConnectionPool(
           connectionString
         );
-        conn.connect(function (err: any) {
-          if (err != null) {
-           log(chalk.redBright(err));
-          } else {
-            conn.query`SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE' AND TABLE_CATALOG='test-npm'`.then(
-              async (res) => {
-                res.recordset.forEach(async (value) => {
-                  await log(chalk.bgMagenta(value.TABLE_NAME));
-                });
-                conn.close();
-              }
-            );
-          }
-        });
+        let isSuccess = false;
+        await conn
+          .connect()
+          .then(() => {
+            log(chalk.magenta("naber", isSuccess));
+            isSuccess = true;
+          })
+          .catch((err) => {
+            isSuccess = false;
+          });
+        log("con", conn.connected);
+        return isSuccess;
     }
   }
 }

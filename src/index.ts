@@ -5,6 +5,7 @@ import figlet from "figlet";
 import chalk from "chalk";
 import { DatabaseService } from "./database.service";
 import { DatabaseType } from "./model/enum/databaseType";
+import { string } from "@oclif/command/lib/flags";
 /**
  * model generator
  */
@@ -62,12 +63,16 @@ class ModelGenerator extends Command {
   async connectDb(connectionString: string) {
     try {
       const service: DatabaseService = new DatabaseService();
-      const result = service
+      const result = await service
         .connectToDb(connectionString, DatabaseType.MSSQL)
         .then((value) => {
           return value;
         });
-      this.log(chalk.green(result));
+      if (result) {
+        this.log(chalk.italic("Congrats Bro"));
+      } else {
+        this.log(chalk.redBright("Something went wrong!!!"));
+      }
     } catch (error) {
       this.log(error);
     }
