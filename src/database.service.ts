@@ -20,18 +20,31 @@ export class DatabaseService {
         const conn: mssql.ConnectionPool = new mssql.ConnectionPool(
           connectionString
         );
-        let isSuccess = false;
         await conn
           .connect()
-          .then(() => {
-            log(chalk.magenta("naber", isSuccess));
-            isSuccess = true;
-          })
+          .then(() => {})
           .catch((err) => {
-            isSuccess = false;
+            log(chalk.red("Error :", err));
           });
-        log("con", conn.connected);
-        return isSuccess;
+        const state = conn.connected;
+        conn.close();
+        return state;
     }
+  }
+  /**
+   * This method will return all db tables for generator
+   * @param {mssql.ConnectionPool} conn Connection pool
+   * @param {string} query Query for run connection poll
+   */
+  public async getDatabaseTables(conn: mssql.ConnectionPool, query: string) {
+    const tableList: string[] = [];
+    await conn.connect();
+    await conn.query(query).then((value) => {
+      value.recordset.forEach((catName) => {
+        tableList.push(catName.TABLE_NAME);
+      });
+    });
+    conn.close();
+    return tableList;
   }
 }
